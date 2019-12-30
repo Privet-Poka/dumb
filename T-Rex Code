@@ -1,0 +1,154 @@
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace T_Rex_Endless_Runner_Game
+{
+    public partial class Form1 : Form
+    {
+        bool jumping = false; //Для проверки, прыгает ли игрок
+        int jumpSpeed = 10; //Скорость прыжка по дефолту
+        int force = 12; //Сила прыжка
+        int score = 0; //Счёт по дефолту
+        int obstacleSpeed = 10; //Скорость движения кактусов по дефолту
+        Random rnd = new Random(); //Рандомайзер
+
+
+
+        public Form1()
+        {
+            //При запуске приложения
+            InitializeComponent(); //Инициализация форм из designer.cs
+            resetGame(); //Запускаем класс resetGame
+        }
+
+        private void gameEvent(object sender, EventArgs e)
+        {
+            //Начинаем игру
+            trex.Top += jumpSpeed; //Связываем прыжок с тирексом и локацией
+            scoreText.Text = "Score: " + score; //Вывод счёта
+
+            if (jumping && force < 0) //Если прыжок = true и сила прыжка меньше нуля
+            {
+                jumping = false; //Не прыгать
+            }
+
+            if (jumping) //Если прыжок = true
+            {
+                jumpSpeed = -12; //Скорость прыжка -12
+                force -= 1; //Уменьшить силу на 1
+            }
+            else 
+            {
+                //Другие условия - установить скорость прыжка на 12
+                jumpSpeed = 12; 
+            }
+            //Для любого компонента Х из нашего конструктора form.1
+            foreach (Control x in this.Controls) 
+            {
+                //Если Х это %name% и её тэг это "кактус"
+                if (x is PictureBox && x.Tag == "obstacle") 
+                {
+                    //То двигаем Х влево (кактусы)
+                    x.Left -= obstacleSpeed; 
+
+                    //Если кактусы съебали за координаты
+                    if (x.Left + x.Width < -120) 
+                    {
+                        //Респаун их в рнд координатах правее, используя формулу
+                        x.Left = this.ClientSize.Width + rnd.Next(200, 800); 
+                        //Прибавляя к счёту 1
+                        score++;
+                    }
+                    //Если тирекс задевает кактус
+                    if (trex.Bounds.IntersectsWith(x.Bounds))
+                    {
+                        //Останавливаем таймер игры
+                        gameTimer.Stop();
+                        //Меняем картинку на картинку мертвого тирекса
+                        trex.Image = Properties.Resources.dead;
+                        //Выводим текст о рестарте
+                        scoreText.Text += "  Press R to Restart";
+                    }
+                }
+            }
+            //Если расположение картинки с тирексом больше или равно 380 и прыжок false(???)
+            if (trex.Top >= 380 && !jumping)
+            {
+                //То параметр силы
+                force = 12;
+                //Расположение картинки с тирексом будет
+                trex.Top = floor.Top - trex.Height; //Равно расположению картинки земли минус высота картинки тирекса
+                jumpSpeed = 0; //Сила прыжка
+            }
+            //Если параметр счёта больше или равен 10
+            if (score >= 10)
+            {
+                //Меняем скорость кактусов
+                obstacleSpeed = 15;
+            }
+        }    
+        private void keyisdown(object sender, KeyEventArgs e)
+        {
+            //Действие при нажатии клавиши (событие form1)
+            //Если ввод с клавы ОК и равен ПРОБЕЛ и прыжок сейчас false(???)
+            if (e.KeyCode == Keys.Space && !jumping)
+    
+            {
+                //То прыгаем
+                jumping = true;
+            }
+
+        }
+        private void keyisup(object sender, KeyEventArgs e)
+        {
+            //Действие при отпускании клавиши
+            //Если ввод с клавы ОК и равен клавише R
+            if (e.KeyCode == Keys.R)
+            {
+                //Активируем resetGame
+                resetGame();
+            }
+            //Если кнопки не нажаты, проверяем, true ли джампинг
+            if (jumping)
+            {
+                //То меняем на false для повторного прыжка
+                jumping = false;
+            }
+        }
+        public void resetGame()
+        {
+            //Данные дефолтных настроек при ресете
+            force = 12;
+            trex.Top = floor.Top - trex.Height; //тирекс на картинке земли
+            jumpSpeed = 0;
+            jumping = false;
+            score = 0;
+            obstacleSpeed = 10;
+            scoreText.Text = "Score: " + score;
+            trex.Image = Properties.Resources.running; //Меняем картинку тирекса на бегущего
+
+            //Для любого компонента Х из нашего конструктора form.1
+            foreach (Control x in this.Controls)
+            {
+                //Если Х это %name% и её тэг это "кактус"
+                if (x is PictureBox && x.Tag == "obstacle")
+                {
+                    //Генерируем рандом производную позиции от 600 до 1000
+                    int position = rnd.Next(600, 1000);
+                    //Смещаем влево и рандомно кактусы при респауне по формуле
+                    x.Left = 640 + (x.Left + position + x.Width * 3);
+                }
+            }
+            //Запуск таймера
+            gameTimer.Start();
+
+        }
+    }
+}
